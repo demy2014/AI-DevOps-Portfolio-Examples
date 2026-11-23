@@ -9,10 +9,6 @@ This repository contains **two connected but independently runnable flagship pro
 
 The projects share an engineering approach: reproducible local environments, containerization, automated CI workflows, operational documentation, explicit security boundaries, and measurable evaluation plans.
 
-> **Demo and safety notice:** This repository is a demonstration, not a production-ready managed service. Do not submit real customer, employee, prospect, credential, or production incident data. Do not treat generated recommendations or lead scores as authoritative decisions.
-
----
-
 ## Contents
 
 - [Portfolio at a glance](#portfolio-at-a-glance)
