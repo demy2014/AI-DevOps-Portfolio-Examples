@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: incident-assistant
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['incidents:8000']
+  - job_name: lead-agent
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['leads:8000']

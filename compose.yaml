@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-portfolio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-demo-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portfolio} -d ${POSTGRES_DB:-portfolio}"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  incidents:
+    build: ./01-ai-devops-incident-response
+    environment:
+      DATABASE_URL: ${INCIDENT_DATABASE_URL:-postgresql+psycopg://portfolio:local-demo-change-me@db:5432/portfolio}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      RUNBOOK_DIR: /app/runbooks
+    volumes: ["./01-ai-devops-incident-response/runbooks:/app/runbooks:ro"]
+    ports: ["8001:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+
+  leads:
+    build: ./02-ai-lead-generation-agent
+    environment:
+      DATABASE_URL: ${LEADS_DATABASE_URL:-postgresql+psycopg://portfolio:local-demo-change-me@db:5432/portfolio}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+    ports: ["8002:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes: ["./01-ai-devops-incident-response/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    depends_on: [incidents, leads]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me-now}
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  pgdata:
